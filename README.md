@@ -1,6 +1,6 @@
 # Large Scale Data Processing: Final Project
 ## Graph matching
-For the final project, you are provided 6 CSV files, each containing an undirected graph, which can be found [here](https://drive.google.com/file/d/1khb-PXodUl82htpyWLMGGNrx-IzC55w8/view?usp=sharing). The files are as follows:  
+Owen Lawlor, Ahmad Choudhry  
 
 |           File name           |        Matching Size         |        Run Time              |  Matching?   |
 | ------------------------------| ---------------------------- | ---------------------------- | ------------ |
@@ -35,7 +35,8 @@ Typically the Greedy Algorithm has a runtime of O(E) where E is the number of ed
 
 In terms of accuracy, the general greedy algorithm offers a 1/2-approximation of the maximum matching in a given graph, where the output of the greedy algorithm is at least 1/2 as large as the maximum matching. Since our algorithm is simply a parallel computing implementation of this greedy algorithm, the same should hold for our program. 
 
-Say M is a maximum matching and G is the matching obtained by the greedy algorithm. Suppose that the greedy algorithm chooses an edge e, on each iteration, where each vertex of e is not associated with any previous edge e in G. This edge is added to G and prevents at most 2 other edges in M are prevented from being added to G. Each edge has format (u,v), and some edge in M, w which is != v, that is connected to u by another edge and a vertex z which is != u, that is connected to v by another edge will be prevented from joining G. These are the two edges that cannot be added to G under the conditions of the greedy algorithm. Say |G| and |M| represent the sizes of G and M, respectively. Since each e in G stops at most 2 edges in M from being added to G, we have the inequality 2|G| >= |M|. In other words, G >= (1/2) * |M|, proving that the greedy algorithm provides a 1/2-approximation for M.
+Say M is a maximum matching and G is the matching obtained by the greedy algorithm. Suppose that the greedy algorithm chooses an edge e, on each iteration, where each vertex of e is not associated with any previous edge e in G. This edge is added to G and prevents at most 2 other edges in M are prevented from being added to G. Each edge has format (u,v), and some edge in M, w which is != v, that is connected to u by another edge and a vertex z which is != u, that is connected to v by another edge will be prevented from joining G. These are the two edges that cannot be added to G under the conditions of the greedy algorithm. Say |G| and |M| represent the sizes of G and M, respectively. 
+Since each e in G stops at most 2 edges in M from being added to G, we have the inequality 2|G| >= |M|. In other words, G >= (1/2) * |M|, proving that the greedy algorithm provides a 1/2-approximation for M.
 
 Sources: https://arxiv.org/pdf/2206.13057#:~:text=There%20is%20a%20simple%20greedy,a%201%2F2%2Dapproximation.
          https://www.cis.upenn.edu/~aaroth/courses/slides/privacymd/Lecture7.pdf

@@ -27,6 +27,8 @@ This was our original idea for obtaining the maximal (or as close as possible to
 
 If we were to do this again in the future with new test cases, I believe that our general strategy would be the same. However, I think to make the most ideal results, both in terms of maximality and runtime, we would need to find another solution to partition overlap and also have a more powerful pc. In addition, having multiple machines would help to more fully realize the speed up effects of partitioning.
 
+Additionally, while we made attempts at using other algorithms, especially Luby's Algorithm, this algorithm was found to be the smoothest to implement, with good run times and surprisingly natural ways to parallelize the process.
+
 ### Algorithmic Advantages and Disadvantages
 
 Another Difference between our algorithm and what the typical Greedy Algorithm may have is that we sort the graph before processing its vertices and edges. After researching the algorithm a bit, we found that sorting the algorithm can lead to larger and more accurate matchings, as it is easier for the greedy algorithm to traverse a sorted graph. While there are many ways to sort the graph, we decided to sort each each by their srcId's and dstId's, as it was an easy approach that worked well with the overall simplicity of the Greedy Algorithm. The disadvantage of sorting, however, is that it can lead to a larger runtime.

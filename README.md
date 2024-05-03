@@ -51,6 +51,7 @@ Since each e in G stops at most 2 edges in M from being added to G, we have the 
 
 Sources: https://arxiv.org/pdf/2206.13057#:~:text=There%20is%20a%20simple%20greedy,a%201%2F2%2Dapproximation.
          https://www.cis.upenn.edu/~aaroth/courses/slides/privacymd/Lecture7.pdf
-
+         
+We also tried implementing lubys algorithm but the code was not efficient enough to run with larger data sets. The code for lubys is in a file called lubys in the main directory but it is not in main as we did not get it working for the larger datasets.
   
  

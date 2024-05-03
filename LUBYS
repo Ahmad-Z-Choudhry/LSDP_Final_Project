@@ -1,0 +1,116 @@
+import org.apache.spark.sql.SparkSession
+import org.apache.spark.graphx._
+import org.apache.spark.rdd.RDD
+import org.apache.spark._
+import org.apache.spark.broadcast.Broadcast
+
+
+object matching {
+  def main(args: Array[String]): Unit = {
+    if (args.length != 1) {
+      println("Usage: matching <input_path>")
+      System.exit(1)
+    }
+
+    val inputPath = args(0)
+    val outputPath = inputPath.replaceAll(".csv$", "_matching.csv")
+
+    val spark = SparkSession.builder()
+      .appName("Graph Matching")
+      .config("spark.master", "local")
+      .getOrCreate()
+
+    import spark.implicits._
+
+    val sc = spark.sparkContext  // Getting the SparkContext from SparkSession
+
+    // Read and prepare the graph data
+    val rawData = spark.read.format("csv").option("header", "false").load(inputPath).rdd
+
+    // Create the graph
+    val edges: RDD[Edge[Double]] = rawData.map(row => Edge(row.getString(0).toLong, row.getString(1).toLong, 0.0))
+    val defaultVertexAttribute = (0.0, 0)
+    val graph = Graph.fromEdges(edges, defaultVertexAttribute)
+
+    // Run the algorithm to find maximal matching
+    val matching = lubyMaximalMatching(graph, sc)
+
+    // Collect and save the result
+    val matchedDF = matching.edges.map(e => (e.srcId, e.dstId)).toDF("Node1", "Node2")
+    val numMatchedEdges = matchedDF.count()  // Count the number of matched edges
+    println(s"Number of matched edges: $numMatchedEdges")
+
+    // Write the output to a single CSV file
+    matchedDF
+      .coalesce(1)
+      .write
+      .csv(outputPath)
+
+
+      spark.stop()
+  }
+
+
+
+  def lubyMaximalMatching(graph: Graph[(Double,Int), Double], sc: SparkContext): Graph[Int, Double] = {
+    var g = graph.mapEdges(e => scala.util.Random.nextDouble()) // Assign a random weight to each edge
+
+
+    var matching: RDD[Edge[Double]] = sc.emptyRDD[Edge[Double]]
+
+
+    while (!g.edges.isEmpty()) {
+
+      g = g.aggregateMessages[(VertexId, Double)](
+        triplet => {
+          // Send edge data to both vertices with edge weight and source ID
+          triplet.sendToSrc((triplet.dstId, triplet.attr))
+          triplet.sendToDst((triplet.srcId, triplet.attr))
+        },
+        (a, b) => if (a._2 > b._2) a else b // Select the edge with the maximum weight
+      )
+
+
+
+
+      val maxEdgesExpanded = maxEdges.flatMap {
+        case (vertexId, (connectedVertexId, weight)) =>
+          Seq(((Math.min(vertexId, connectedVertexId), Math.max(vertexId, connectedVertexId)), weight))
+      }
+     
+
+      // Count each edge and filter those that appear exactly twice
+      val repeatedEdges = maxEdgesExpanded
+              .map{ case ((srcId, dstId), weight) => (((srcId, dstId), weight), 1) } // Explicitly declare types in the lambda
+              .reduceByKey(_ + _)                         // Sum the counts for each edge
+              .filter(_._2 == 2)                          // Filter edges that count to 2
+              .map(_._1)                                  // Extract the edge info, discard the count
+
+  
+
+      // Extract and add the repeated edges to the matching RDD
+      val newMatches = repeatedEdges.map {
+        case ((srcId, dstId), weight) => Edge(srcId, dstId, weight)
+      }
+      matching = matching.union(newMatches).distinct()
+
+      val simpleEdges: RDD[(VertexId, VertexId)] = repeatedEdges.map {
+        case ((srcId, dstId), _) => (srcId, dstId) // Discard the weight and keep only the vertex identifiers
+      }
+
+
+      val matchedVertices = simpleEdges.flatMap {
+        case (srcId, dstId) => Seq(srcId, dstId)
+      }.distinct().collect()
+
+      // Remove edges connected to the matched vertices
+
+      val verticesToRemoveBC = sc.broadcast(matchedVertices)
+      g = g.subgraph(vpred = (id, _) => !verticesToRemoveBC.value.contains(id),
+        epred = e => !verticesToRemoveBC.value.contains(e.srcId) && !verticesToRemoveBC.value.contains(e.dstId))
+    }
+
+    Graph.fromEdges(matching, defaultValue = 0)
+  }
+}
+
